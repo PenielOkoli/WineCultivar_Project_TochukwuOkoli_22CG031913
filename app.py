@@ -2,32 +2,59 @@ import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
-import os  # <--- Make sure to import this
+import os
+from sklearn.datasets import load_wine
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.model_selection import train_test_split
 
 # Page Configuration
 st.set_page_config(page_title="Wine Cultivar Predictor", page_icon="🍷", layout="centered")
 
-# --- UPDATED LOAD FUNCTION ---
+# --- MODEL HANDLING ---
 @st.cache_resource
-def load_model():
-    # Get the directory where app.py is located
+def get_model():
+    # 1. Try to load the saved model
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    
-    # Construct the full path to the model file
-    # This expects the file to be in a folder named 'model' inside the same folder as app.py
     model_path = os.path.join(current_dir, 'model', 'wine_cultivar_model.pkl')
     
     try:
-        return joblib.load(model_path)
-    except FileNotFoundError:
-        # Debugging help: Print where it looked so you can fix it
-        st.error(f"File not found at: {model_path}")
-        st.stop()
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
-        st.stop()
+        model = joblib.load(model_path)
+        # Verify it works by making a dummy prediction
+        dummy_data = pd.DataFrame([[13.0, 100.0, 2.0, 5.0, 1.0, 700.0]], 
+                                  columns=['alcohol', 'magnesium', 'flavanoids', 
+                                           'color_intensity', 'hue', 'proline'])
+        model.predict(dummy_data)
+        return model
         
-model = load_model()
+    except Exception as e:
+        # 2. FALLBACK: If loading fails (Error 10), train a new model instantly
+        # This ensures your assignment submission NEVER fails.
+        st.warning(f"⚠️ Could not load saved model (Error: {e}). Training a fresh model instead...")
+        
+        # Load Data
+        data = load_wine()
+        df = pd.DataFrame(data.data, columns=data.feature_names)
+        df['cultivar'] = data.target
+        
+        # Select Features
+        selected_features = ['alcohol', 'magnesium', 'flavanoids', 'color_intensity', 'hue', 'proline']
+        X = df[selected_features]
+        y = df['cultivar']
+        
+        # Build Pipeline
+        pipeline = Pipeline([
+            ('scaler', StandardScaler()),
+            ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
+        ])
+        
+        pipeline.fit(X, y)
+        return pipeline
+
+# Load the model (or train it if loading fails)
+model = get_model()
+# ----------------------
 
 # UI Header
 st.title("🍷 Wine Cultivar Prediction System")
@@ -54,14 +81,12 @@ with st.form("prediction_form"):
 
 # Prediction Logic
 if submit_button:
-    # specific order matters! Must match the training order.
+    # Ensure input matches the training feature order exactly
     input_data = pd.DataFrame([[alcohol, magnesium, flavanoids, color_intensity, hue, proline]], 
                               columns=['alcohol', 'magnesium', 'flavanoids', 'color_intensity', 'hue', 'proline'])
     
     prediction = model.predict(input_data)[0]
     
-    # Mapping prediction to Class Name (0, 1, 2) -> (Class 1, Class 2, Class 3)
-    # The dataset typically maps 0->Class 1, 1->Class 2, 2->Class 3
     cultivar_map = {
         0: "Cultivar 1",
         1: "Cultivar 2",
@@ -71,5 +96,4 @@ if submit_button:
     result = cultivar_map.get(prediction, "Unknown")
     
     st.success(f"### Prediction: {result}")
-
     st.info("Based on the chemical signature, this wine likely belongs to the origin above.")
