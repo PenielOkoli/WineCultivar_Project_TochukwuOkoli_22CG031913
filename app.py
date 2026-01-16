@@ -1,27 +1,33 @@
-# app.py
 import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
+import os  # <--- Make sure to import this
 
 # Page Configuration
 st.set_page_config(page_title="Wine Cultivar Predictor", page_icon="🍷", layout="centered")
 
-# Load the trained model
+# --- UPDATED LOAD FUNCTION ---
 @st.cache_resource
 def load_model():
+    # Get the directory where app.py is located
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Construct the full path to the model file
+    # This expects the file to be in a folder named 'model' inside the same folder as app.py
+    model_path = os.path.join(current_dir, 'model', 'wine_cultivar_model.pkl')
+    
     try:
-        # Tries to load from the 'model' folder
-        return joblib.load('model/wine_cultivar_model.pkl')
+        return joblib.load(model_path)
     except FileNotFoundError:
-        # Fallback if running from a different directory context
-        return joblib.load('wine_cultivar_model.pkl')
-
-try:
-    model = load_model()
-except Exception as e:
-    st.error(f"Error loading model: {e}. Please ensure 'wine_cultivar_model.pkl' exists.")
-    st.stop()
+        # Debugging help: Print where it looked so you can fix it
+        st.error(f"File not found at: {model_path}")
+        st.stop()
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        st.stop()
+        
+model = load_model()
 
 # UI Header
 st.title("🍷 Wine Cultivar Prediction System")
@@ -65,4 +71,5 @@ if submit_button:
     result = cultivar_map.get(prediction, "Unknown")
     
     st.success(f"### Prediction: {result}")
+
     st.info("Based on the chemical signature, this wine likely belongs to the origin above.")
