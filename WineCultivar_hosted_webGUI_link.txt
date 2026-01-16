@@ -2,5 +2,6 @@ Name: Tochukwu Okoli
 Matric Number: 22CG031913
 Machine Learning Algorithm Used: Random Forest Classifier
 Model persistence method used: Joblib
-Live URL of the hosted application: [Paste Link After Deployment]
-GitHub repository link: [Paste GitHub Link]
+Live URL of the hosted application: https://winecultivarprojecttochukwuokoli22cg031913-hmuspq9ftxpakxtvyqq.streamlit.app/
+
+GitHub repository link: https://github.com/PenielOkoli/WineCultivar_Project_TochukwuOkoli_22CG031913
