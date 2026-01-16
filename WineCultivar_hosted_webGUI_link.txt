@@ -1,0 +1,6 @@
+Name: Tochukwu Okoli
+Matric Number: 22CG031913
+Machine Learning Algorithm Used: Random Forest Classifier
+Model persistence method used: Joblib
+Live URL of the hosted application: [Paste Link After Deployment]
+GitHub repository link: [Paste GitHub Link]
